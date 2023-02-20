@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> bonsai-plant</title>
+    <link rel="stylesheet" href="style/style.css">
+    <link rel="stylesheet" href="style/plants.css">
+    <script src="Scripts/jquery.js"></script>
+</head>
+<body>
+    <header class="header">
+
+        <div class="container">
+
+            <div class="header01">
+
+                <h2>Bonsai  Shop </h2>
+            </div>
+
+
+            <div class="sub-header">
+                <ul>
+                    <li><a href="home.html">home</a></li>
+                    <li><a href="category.html">category</a></li>
+                    <li><a href="About.html">About</a></li>
+                    <li><a href="Contact.html">Contact us</a></li>
+                </ul>
+                <div class="search">
+                    <input type="text" name="search" value="search category" />
+                    <button type="button" value="search">search</button>
+                    <a href="02.html"><img src="Images/cart_icon.png"></a>
+                    <button><a href="plants.html">AddnewPlants</a></button>
+                </div>
+
+            </div>
+
+
+        </div>
+        <section>
+
+            <!--<div class="search">
+                <input type="text" name="search" value="search category" />
+                <button type="button" value="search">search</button>
+            </div>-->
+            <div class="main">
+                <h2>  Add a new plants</h2>
+
+            </div>
+
+            <div class="details">
+
+
+                <div id="container">
+                    <div id="left">
+                        <h2>plant category information</h2>
+                        <table id="tbl" cellpadding="3" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>plants name</th>
+                                    <th>Plant Category</th>
+                                    <th>Price</th>
+                                    <th> Image</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="detail02">
+                <div id="right">
+                    <h2>Add new category</h2>
+                    <div>
+                        <label class="label">Plant name</label>
+                        <input type="text" id="plant-name" />
+                    </div>
+                    <div>
+                        <label class="label">Product Category</label>
+                        <select class="category" name="category" id="plant-category">
+                            <option value="">Select Category</option>
+                            <option value="flower">flower plant</option>
+                            <option value="fruit">fruit plant</option>
+                            <option value="indoor">indoor plant</option>
+                            <option value="vegetable">vegetable palnt</option>
+                            <option value="herbal">herbal plant</option>
+                            <option value="seeds">plant seeds</option>
+                            <option value="tools">plant tools</option>
+                            <option value="pestidues">plant pestidues</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label">Price</label>
+                        <input type="text" id="plant-price" />
+                    </div>
+                    <div>
+                        <label class="label">Image</label>
+                        <input type="text" id="plant-image" />
+                    </div>
+                    <div class="add">
+                        <!--<input type="button" id="add" value="Add cart" />-->
+                        <button type="button" id="add" value="Add New">add new</button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </header>
+
+    <footer>
+
+        <div class="footer">
+            <p>Plant tress to save the environment</p>
+            <p>&copy BonsaiShop.com/2022</p>
+
+        </div>
+    </footer>
+    <br />
+    <script src="Scripts/jquery-3.5.1.js"></script>
+
+    <script type="text/javascript">
+        var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+
+        window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
+        window.IDBCursor = window.IDBCursor || window.webkitIDBCursor;
+        window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
+
+        var db;
+        var currentEdit = null;
+
+        $(document).ready(function () {
+            var openReq = indexedDB.open("plantsDB", 1);
+            openReq.onupgradeneeded = function (e) {
+                db = e.target.result;
+
+                var store = db.createObjectStore("plants", { keyPath: "id", autoIncrement: true });
+                console.log(store);
+            }
+
+            openReq.onsuccess = function (e) {
+                db = e.target.result;
+                console.log(db);
+                readAll();
+
+                //Add Data
+                $("#add").click(function () {
+                    if ($("#plant-name").val() != "" && $("#plant-category").val() != "" && $("#plant-price").val() != "" && $("#plant-image").val() != "") {
+                        var tx = db.transaction(["plants"], "readwrite");
+                        if (currentEdit == null) {
+                            var store = tx.objectStore("plants");
+                            var req = store.add({
+                                PlantName: $("#plant-name").val(),
+                                PlantCategory: $("#plant-category").val(),
+                                Price: $("#plant-price").val(),
+                                Image: $("#plant-image").val()
+                            });
+                            req.onsuccess = function (e) {
+                                console.log("Added data...");
+                                readAll();
+                            }
+                        }
+                        else {
+                            var store = tx.objectStore("plants");
+                            var req = store.put({
+
+                                PlantName: $("#plant-name").val(),
+                                PlantCategory: $("#plant-category").val(),
+                                Price: $("#plant-price").val(),
+                                Image: $("#plant-image").val(),
+                                id: currentEdit.id
+                            });
+                            req.onsuccess = function (e) {
+                                console.log("Updated data...");
+                                readAll();
+                            }
+                        }
+                        $("#add").val("Add New");
+                        currentEdit = null;
+                    }
+                    else {
+                        alert("Please fill up the all fields!!!");
+                    }
+                });
+            }
+        });
+
+        function readAll() {
+            $("#tbl tbody").empty();
+            var tx = db.transaction(["plants"], "readonly");
+            var req = tx.objectStore("plants").openCursor();
+            req.onsuccess = function (e) {
+                var cursor = e.target.result;
+                if (!cursor) return;
+                $("#tbl tbody").append(
+                    "<tr>" +
+                    "<td>" + cursor.value.PlantName + "</td>" +
+                    "<td>" + cursor.value.PlantCategory + "</td>" +
+                    "<td>" + cursor.value.Price + "</td>" +
+                    "<td>" + cursor.value.Image + "</td>" +
+                    "<td>" + "<button type='button' class='edit' data-key='" + cursor.key + "'>Edit</button>|<button type = 'button' class='delete' data-key='" + cursor.key + "'>Delete</button>" + "</td>" +
+                    "</tr>"
+                )
+                cursor.continue();
+            }
+            req.onerror = function (err) {
+                console.log(err);
+            }
+            //for delete
+            tx.oncomplete = function () {
+                $(".delete").click(function () {
+                    var id = $(this).attr('data-key');
+                    var row = $(this).parent().parent();
+                    var tx = db.transaction(["plants"], "readwrite");
+                    var store = tx.objectStore("plants");
+                    var req = store.delete(parseInt(id));
+                    req.onsuccess = function (e) {
+                        console.log("Data deleted successfullly!!!!");
+                        row.remove();
+                    }
+                })
+
+                //For edit
+                $(".edit").click(function (evt) {
+                    evt.preventDefault();
+                    fillForm($(this).attr('data-key'));
+                })
+            }
+        }
+
+        function fillForm(id) {
+            var t = db.transaction(["plants"], "readwrite");
+            var objStore = t.objectStore("plants");
+            var request = objStore.get(parseInt(id));
+            request.onsuccess = function (evt) {
+                currentEdit = request.result;
+                console.log(currentEdit);
+                $("#plant-name").val(currentEdit.PlantName);
+                $("#plant-category").val(currentEdit.PlantCategory);
+                $("#plant-price").val(currentEdit.Price);
+                $("#plant-image").val(currentEdit.Image);
+                $("#add").val("Update");
+            }
+        }
+    </script>
+
+</body>
+</html>
